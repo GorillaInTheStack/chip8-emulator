@@ -1,0 +1,14 @@
+services:
+  devcontainer:
+    image: devcontainer:${TAG}
+    hostname: devcontainer
+    build: 
+      context: .
+      args:
+        STACK_PKGS: ${STACK_PKGS}
+    volumes:
+      - .:/home/devuser/workspace
+    working_dir: /home/devuser/workspace
+    stdin_open: true
+    tty: true
+
