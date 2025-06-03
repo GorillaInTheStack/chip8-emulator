@@ -2,7 +2,7 @@ services:
   devcontainer:
     image: devcontainer:${TAG}
     hostname: devcontainer
-    build: 
+    build:
       context: .
       args:
         STACK_PKGS: ${STACK_PKGS}
@@ -11,4 +11,7 @@ services:
     working_dir: /home/devuser/workspace
     stdin_open: true
     tty: true
+    ports:
+      - "9999:5901" # VNC
+      - "6080:6080" # noVNC
 

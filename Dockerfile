@@ -1,27 +1,37 @@
-FROM archlinux:base-devel
+FROM debian:12-slim
 
-ARG STACK_PKGS=""
-ENV HOSTNAME="devcontainer"
+ENV DEBIAN_FRONTEND=noninteractive
 
-RUN useradd -m devuser && echo "devuser ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+RUN apt-get update && apt-get install -y --no-install-recommends \
+  xfce4 \
+  xfce4-terminal \
+  tigervnc-standalone-server \
+  tigervnc-tools \
+  novnc \
+  websockify \
+  dbus-x11 \
+  curl \
+  build-essential \
+  ca-certificates \
+  sudo \
+  libsdl2-dev \
+  libsdl2-image-dev \
+  libsdl2-ttf-dev \
+  && rm -rf /var/lib/apt/lists/*
 
-RUN pacman -Syu --noconfirm \
-    base-devel git curl neovim zsh starship sudo $STACK_PKGS \
-    && pacman -Scc --noconfirm
+RUN useradd -m developer \
+  && echo "developer ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-RUN mkdir -p /home/devuser/.config
+USER developer
+ENV HOME=/home/developer
+RUN curl https://sh.rustup.rs -sSf | sh -s -- -y \
+  && . "$HOME/.cargo/env" \
+  && rustup update stable
 
-RUN git clone https://github.com/zsh-users/zsh-autosuggestions /usr/share/zsh/plugins/zsh-autosuggestions && \
-    git clone https://github.com/zsh-users/zsh-syntax-highlighting /usr/share/zsh/plugins/zsh-syntax-highlighting
+COPY --chown=developer:developer entrypoint.sh /home/developer/entrypoint.sh
+RUN chmod +x /home/developer/entrypoint.sh
 
-RUN mkdir -p /home/devuser/.config && \
-    curl -fsSL https://gist.githubusercontent.com/GorillaInTheStack/40ace1e2b73c1aac67fad15441c7e7a5/raw/.zshrc -o /home/devuser/.zshrc && \
-    curl -fsSL https://gist.githubusercontent.com/GorillaInTheStack/40ace1e2b73c1aac67fad15441c7e7a5/raw/starship.toml -o /home/devuser/.config/starship.toml
+EXPOSE 5901 6080
 
-RUN chown -R devuser:devuser /home/devuser
-
-USER devuser
-WORKDIR /home/devuser/workspace
-
-CMD ["zsh"]
+CMD ["/home/developer/entrypoint.sh"]
 
